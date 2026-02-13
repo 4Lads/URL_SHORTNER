@@ -83,7 +83,7 @@ export const config: EnvConfig = {
   redisUrl: getEnvVar('REDIS_URL', 'redis://localhost:6379'),
   redisHost: getEnvVar('REDIS_HOST', 'localhost'),
   redisPort: getEnvNumber('REDIS_PORT', 6379),
-  redisPassword: getEnvVar('REDIS_PASSWORD', ''),
+  redisPassword: process.env.REDIS_PASSWORD || '',
 
   // Authentication
   jwtSecret: getEnvVar('JWT_SECRET', 'your-super-secret-jwt-key-change-this-in-production'),
