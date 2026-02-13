@@ -5,6 +5,10 @@ import morgan from 'morgan';
 import config, { validateConfig } from './config/env';
 import { testConnection as testDatabaseConnection } from './config/database';
 import { connectRedis } from './config/redis';
+import { UrlController } from './controllers/url.controller';
+import userRoutes from './routes/user.routes';
+import urlAuthRoutes from './routes/url.auth.routes';
+import analyticsRoutes from './routes/analytics.routes';
 
 // Initialize Express app
 const app = express();
@@ -60,12 +64,19 @@ app.get('/api', (_req: Request, res: Response) => {
     data: {
       name: 'URL Shortener API',
       version: '1.0.0',
-      description: 'Fast, scalable URL shortening service',
+      description: 'Fast, scalable URL shortening service with authentication',
       endpoints: {
         health: '/health',
         docs: '/api',
-        shorten: 'POST /api/shorten',
-        redirect: 'GET /:shortCode',
+        auth: {
+          register: 'POST /api/auth/register',
+          login: 'POST /api/auth/login',
+          me: 'GET /api/auth/me',
+        },
+        urls: {
+          shorten: 'POST /api/shorten',
+          redirect: 'GET /:shortCode',
+        },
       },
     },
   });
@@ -94,20 +105,20 @@ app.get('/api/test', async (_req: Request, res: Response) => {
   }
 });
 
-// Root redirect endpoint (placeholder)
-app.get('/:shortCode', (req: Request, res: Response) => {
-  const { shortCode } = req.params;
+// Authentication routes
+app.use('/api/auth', userRoutes);
 
-  // Placeholder response - will implement actual redirect logic later
-  res.status(200).json({
-    success: true,
-    data: {
-      message: 'Redirect endpoint ready',
-      shortCode,
-      note: 'Full redirect logic will be implemented next',
-    },
-  });
-});
+// Authenticated URL management routes
+app.use('/api/urls', urlAuthRoutes);
+
+// Analytics routes
+app.use('/api/analytics', analyticsRoutes);
+
+// URL Shortening endpoint (anonymous)
+app.post('/api/shorten', UrlController.shortenUrl);
+
+// Redirect endpoint
+app.get('/:shortCode', UrlController.redirectToOriginal);
 
 // 404 handler
 app.use((req: Request, res: Response) => {
@@ -156,10 +167,17 @@ const startServer = async () => {
       console.log(`⚡ Cache: Redis (${config.redisHost}:${config.redisPort})`);
       console.log('');
       console.log('📚 Endpoints:');
-      console.log(`   GET  /health              - Health check`);
-      console.log(`   GET  /api                 - API info`);
-      console.log(`   GET  /api/test            - Test endpoint`);
-      console.log(`   GET  /:shortCode          - Redirect (placeholder)`);
+      console.log(`   GET  /health                    - Health check`);
+      console.log(`   GET  /api                       - API info`);
+      console.log(`   POST /api/auth/register         - Register user`);
+      console.log(`   POST /api/auth/login            - Login user`);
+      console.log(`   GET  /api/auth/me               - Get current user`);
+      console.log(`   GET  /api/urls                  - List user URLs (auth)`);
+      console.log(`   POST /api/urls                  - Create URL (auth)`);
+      console.log(`   PUT  /api/urls/:id              - Update URL (auth)`);
+      console.log(`   DEL  /api/urls/:id              - Delete URL (auth)`);
+      console.log(`   POST /api/shorten               - Shorten URL (anonymous)`);
+      console.log(`   GET  /:shortCode                - Redirect to URL`);
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log('');
     });

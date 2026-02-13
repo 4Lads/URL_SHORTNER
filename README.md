@@ -137,7 +137,7 @@ url_shortner/
 
 6. **Access the application**
    - Frontend: http://localhost:5173
-   - Backend API: http://localhost:3000
+   - Backend API: http://localhost:3005
 
 ### Option 2: Docker Development (Recommended)
 
@@ -161,9 +161,9 @@ url_shortner/
 
 4. **Access the application**
    - Frontend: http://localhost:5173
-   - Backend API: http://localhost:3000
+   - Backend API: http://localhost:3005
    - PostgreSQL: localhost:5432
-   - Redis: localhost:6379
+   - Redis: localhost:6380
 
 5. **View logs**
    ```bash

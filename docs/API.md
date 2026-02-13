@@ -2,7 +2,7 @@
 
 ## Base URL
 ```
-Development: http://localhost:3000
+Development: http://localhost:3005
 Production: https://api.yourdomain.com
 ```
 
@@ -47,7 +47,7 @@ Content-Type: application/json
   "success": true,
   "data": {
     "shortCode": "aB3xK9",
-    "shortUrl": "http://localhost:3000/aB3xK9",
+    "shortUrl": "http://localhost:3005/aB3xK9",
     "originalUrl": "https://www.example.com/very/long/url/that/needs/shortening",
     "createdAt": "2026-02-13T10:30:00.000Z"
   }
@@ -327,7 +327,7 @@ Get all URLs created by the authenticated user.
       {
         "id": "660e8400-e29b-41d4-a716-446655440000",
         "shortCode": "aB3xK9",
-        "shortUrl": "http://localhost:3000/aB3xK9",
+        "shortUrl": "http://localhost:3005/aB3xK9",
         "originalUrl": "https://www.example.com/page",
         "title": "Example Page",
         "clickCount": 156,
@@ -364,7 +364,7 @@ Get details for a specific URL owned by the user.
   "data": {
     "id": "660e8400-e29b-41d4-a716-446655440000",
     "shortCode": "aB3xK9",
-    "shortUrl": "http://localhost:3000/aB3xK9",
+    "shortUrl": "http://localhost:3005/aB3xK9",
     "originalUrl": "https://www.example.com/page",
     "title": "Example Page",
     "userId": "550e8400-e29b-41d4-a716-446655440000",
