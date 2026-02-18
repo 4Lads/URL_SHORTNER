@@ -549,6 +549,45 @@ docker-compose build --no-cache
 # backend/Dockerfile: FROM node:18-alpine
 ```
 
+#### 6. TypeScript Compilation Errors on Cloud Platforms (Render, Railway, etc.)
+
+**Error:** `TS7016: Could not find a declaration file for module 'express'` or `TS2580: Cannot find name 'process'`
+
+**Root Cause:** Cloud platforms often run `npm install --production` which skips devDependencies. Type definitions (@types/*) need to be in `dependencies` for production TypeScript builds.
+
+**Solution:** ✅ **Already Fixed in This Project**
+
+The project has been configured correctly with:
+1. **TypeScript type definitions moved to dependencies** (not devDependencies)
+2. **tsconfig.json includes `"types": ["node"]`** for Node.js globals
+
+If you encounter this error:
+```bash
+# Verify package.json has @types in dependencies section
+grep -A 20 '"dependencies"' backend/package.json | grep "@types"
+
+# Should show:
+# "@types/bcrypt": "^5.0.2",
+# "@types/cors": "^2.8.17",
+# "@types/express": "^4.17.21",
+# "@types/jsonwebtoken": "^9.0.5",
+# "@types/morgan": "^1.9.9",
+# "@types/node": "^20.10.6",
+# "@types/pg": "^8.10.9",
+# "@types/qrcode": "^1.5.5",
+# "@types/ua-parser-js": "^0.7.39",
+# "typescript": "^5.3.3"
+
+# Verify tsconfig.json includes Node types
+grep "types" backend/tsconfig.json
+# Should show: "types": ["node"],
+```
+
+**For Render.com Specific:**
+- Build Command: `npm install && npm run build`
+- Start Command: `npm start`
+- Ensure "Auto-Deploy" is enabled to pick up latest changes
+
 ### Health Check Commands
 
 ```bash
