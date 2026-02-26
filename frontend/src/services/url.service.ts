@@ -87,6 +87,6 @@ export const urlService = {
       params: { format },
       responseType: 'blob',
     });
-    return response;
+    return response as unknown as Blob;
   },
 };

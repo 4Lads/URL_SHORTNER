@@ -9,6 +9,8 @@ import { UrlController } from './controllers/url.controller';
 import userRoutes from './routes/user.routes';
 import urlAuthRoutes from './routes/url.auth.routes';
 import analyticsRoutes from './routes/analytics.routes';
+import billingRoutes from './routes/billing.routes';
+import webhookRoutes from './routes/webhook.routes';
 
 // Initialize Express app
 const app = express();
@@ -32,6 +34,9 @@ app.use(
     credentials: true,
   })
 );
+
+// Stripe webhook route - MUST come before express.json() for raw body
+app.use('/api/webhooks', webhookRoutes);
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
@@ -113,6 +118,9 @@ app.use('/api/urls', urlAuthRoutes);
 
 // Analytics routes
 app.use('/api/analytics', analyticsRoutes);
+
+// Billing routes
+app.use('/api/billing', billingRoutes);
 
 // URL Shortening endpoint (anonymous)
 app.post('/api/shorten', UrlController.shortenUrl);

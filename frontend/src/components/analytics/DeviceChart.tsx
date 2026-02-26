@@ -1,5 +1,5 @@
 import React from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { DevicePhoneMobileIcon, ComputerDesktopIcon, DeviceTabletIcon } from '@heroicons/react/24/outline';
 
 interface DeviceChartProps {
@@ -14,13 +14,6 @@ const COLORS = {
   desktop: '#06b6d4',     // Cyan
   tablet: '#f59e0b',      // Amber
   unknown: '#94a3b8',     // Gray
-};
-
-const GRADIENTS = {
-  mobile: ['#8b5cf6', '#7c3aed'],
-  desktop: ['#06b6d4', '#0891b2'],
-  tablet: ['#f59e0b', '#d97706'],
-  unknown: ['#94a3b8', '#64748b'],
 };
 
 const DEVICE_ICONS = {

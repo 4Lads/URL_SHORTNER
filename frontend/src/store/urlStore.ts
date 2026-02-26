@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import api from '../services/api';
 
 export interface ShortUrl {
   id: string;
@@ -68,7 +69,7 @@ interface UrlState {
   clearError: () => void;
 }
 
-export const useUrlStore = create<UrlState>((set, get) => ({
+export const useUrlStore = create<UrlState>((set) => ({
   urls: [],
   currentUrl: null,
   pagination: {
@@ -96,18 +97,7 @@ export const useUrlStore = create<UrlState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/urls?page=${page}&limit=10`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch URLs');
-      }
-
-      const data = await response.json();
+      const data: any = await api.get('/urls', { params: { page, limit: 10 } });
 
       if (data.success && data.data) {
         set({
@@ -115,8 +105,8 @@ export const useUrlStore = create<UrlState>((set, get) => ({
           pagination: data.data.pagination,
         });
       }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to fetch URLs';
+    } catch (error: any) {
+      const message = error?.message || 'Failed to fetch URLs';
       set({ error: message });
     } finally {
       set({ isLoading: false });
@@ -127,25 +117,9 @@ export const useUrlStore = create<UrlState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/urls', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { 'Authorization': `Bearer ${token}` }),
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error?.message || 'Failed to create URL');
-      }
-
-      const responseData = await response.json();
+      const responseData: any = await api.post('/urls', data);
 
       if (responseData.success && responseData.data) {
-        // Add new URL to the beginning of the list
         const newUrl = transformUrl(responseData.data);
         set((state) => ({
           urls: [newUrl, ...state.urls],
@@ -155,8 +129,8 @@ export const useUrlStore = create<UrlState>((set, get) => ({
       }
 
       throw new Error('Invalid response format');
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to create URL';
+    } catch (error: any) {
+      const message = error?.message || 'Failed to create URL';
       set({ error: message });
       throw error;
     } finally {
@@ -168,24 +142,9 @@ export const useUrlStore = create<UrlState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/urls/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update URL');
-      }
-
-      const responseData = await response.json();
+      const responseData: any = await api.put(`/urls/${id}`, data);
 
       if (responseData.success && responseData.data) {
-        // Update URL in the list
         const updatedUrl = transformUrl(responseData.data);
         set((state) => ({
           urls: state.urls.map((url) =>
@@ -193,8 +152,8 @@ export const useUrlStore = create<UrlState>((set, get) => ({
           ),
         }));
       }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to update URL';
+    } catch (error: any) {
+      const message = error?.message || 'Failed to update URL';
       set({ error: message });
       throw error;
     } finally {
@@ -206,24 +165,13 @@ export const useUrlStore = create<UrlState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/urls/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      await api.delete(`/urls/${id}`);
 
-      if (!response.ok) {
-        throw new Error('Failed to delete URL');
-      }
-
-      // Remove URL from the list
       set((state) => ({
         urls: state.urls.filter((url) => url.id !== id),
       }));
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to delete URL';
+    } catch (error: any) {
+      const message = error?.message || 'Failed to delete URL';
       set({ error: message });
       throw error;
     } finally {
@@ -235,24 +183,13 @@ export const useUrlStore = create<UrlState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/urls/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch URL');
-      }
-
-      const data = await response.json();
+      const data: any = await api.get(`/urls/${id}`);
 
       if (data.success && data.data) {
         set({ currentUrl: transformUrl(data.data) });
       }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to fetch URL';
+    } catch (error: any) {
+      const message = error?.message || 'Failed to fetch URL';
       set({ error: message });
     } finally {
       set({ isLoading: false });

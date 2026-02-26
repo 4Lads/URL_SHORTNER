@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { UrlModel } from '../models/url.model';
 import { UrlService } from '../services/url.service';
+import { UsageModel } from '../models/usage.model';
 import { z } from 'zod';
 
 // Validation schemas
@@ -114,6 +115,9 @@ export class UrlAuthController {
       if (expiresAt) {
         urlRecord = await UrlModel.update(urlRecord.id, { expiresAt });
       }
+
+      // Track usage for quota enforcement
+      await UsageModel.incrementLinksCreated(userId);
 
       const baseUrl = process.env.BASE_URL || 'http://localhost:3005';
 

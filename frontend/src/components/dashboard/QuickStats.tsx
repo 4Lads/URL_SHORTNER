@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Card } from '../common';
 import {
   LinkIcon,
@@ -6,88 +6,48 @@ import {
   ChartBarIcon,
   CheckCircleIcon,
 } from '@heroicons/react/24/outline';
-
-interface StatData {
-  totalUrls: number;
-  totalClicks: number;
-  activeUrls: number;
-  avgClicksPerUrl: number;
-}
+import { useUrlStore } from '../../store/urlStore';
 
 interface QuickStatsProps {
   className?: string;
 }
 
 export const QuickStats: React.FC<QuickStatsProps> = ({ className = '' }) => {
-  const [stats, setStats] = useState<StatData>({
-    totalUrls: 0,
-    totalClicks: 0,
-    activeUrls: 0,
-    avgClicksPerUrl: 0,
-  });
-  const [isLoading, setIsLoading] = useState(true);
+  const { urls, isLoading } = useUrlStore();
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
-
-  const fetchStats = async () => {
-    try {
-      setIsLoading(true);
-      // TODO: Replace with actual API call
-      // const response = await urlService.getStats();
-
-      // Mock data for now
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      setStats({
-        totalUrls: 42,
-        totalClicks: 1234,
-        activeUrls: 38,
-        avgClicksPerUrl: 29.4,
-      });
-    } catch (error) {
-      console.error('Failed to fetch stats:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const totalUrls = urls.length;
+  const totalClicks = urls.reduce((sum, url) => sum + (url.clickCount || 0), 0);
+  const activeUrls = urls.filter((url) => url.isActive).length;
+  const avgClicksPerUrl = totalUrls > 0 ? totalClicks / totalUrls : 0;
 
   const statCards = [
     {
       label: 'Total Links',
-      value: stats.totalUrls,
+      value: totalUrls,
       icon: LinkIcon,
       color: 'text-primary-600',
       bgColor: 'bg-primary-50',
-      trend: '+12%',
-      trendUp: true,
     },
     {
       label: 'Total Clicks',
-      value: stats.totalClicks.toLocaleString(),
+      value: totalClicks.toLocaleString(),
       icon: CursorArrowRaysIcon,
       color: 'text-secondary-600',
       bgColor: 'bg-secondary-50',
-      trend: '+24%',
-      trendUp: true,
     },
     {
       label: 'Avg Clicks/Link',
-      value: stats.avgClicksPerUrl.toFixed(1),
+      value: avgClicksPerUrl.toFixed(1),
       icon: ChartBarIcon,
       color: 'text-accent-600',
       bgColor: 'bg-accent-50',
-      trend: '+8%',
-      trendUp: true,
     },
     {
       label: 'Active Links',
-      value: stats.activeUrls,
+      value: activeUrls,
       icon: CheckCircleIcon,
       color: 'text-green-600',
       bgColor: 'bg-green-50',
-      trend: '100%',
-      trendUp: true,
     },
   ];
 
@@ -122,16 +82,6 @@ export const QuickStats: React.FC<QuickStatsProps> = ({ className = '' }) => {
                 <p className="mt-2 text-3xl font-bold text-neutral-900 dark:text-neutral-50">
                   {stat.value}
                 </p>
-                <div className="mt-2 flex items-center">
-                  <span
-                    className={`text-sm font-medium ${
-                      stat.trendUp ? 'text-green-600' : 'text-red-600'
-                    }`}
-                  >
-                    {stat.trend}
-                  </span>
-                  <span className="ml-2 text-xs text-neutral-500">vs last month</span>
-                </div>
               </div>
               <div
                 className={`flex h-12 w-12 items-center justify-center rounded-lg ${stat.bgColor}`}

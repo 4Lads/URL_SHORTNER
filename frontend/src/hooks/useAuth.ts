@@ -20,7 +20,6 @@ export const useAuth = () => {
     setError,
     logout,
     clearError,
-    checkAuth,
   } = useAuthStore();
 
   // Check authentication on mount - only after hydration completes

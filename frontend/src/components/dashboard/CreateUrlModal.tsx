@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Modal, Input, Button } from '../common';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { useUrlStore } from '../../store/urlStore';
@@ -10,6 +11,7 @@ interface CreateUrlModalProps {
 }
 
 export const CreateUrlModal: React.FC<CreateUrlModalProps> = ({ isOpen, onClose }) => {
+  const navigate = useNavigate();
   const { createUrl, isLoading } = useUrlStore();
   const [formData, setFormData] = useState({
     url: '',
@@ -58,13 +60,22 @@ export const CreateUrlModal: React.FC<CreateUrlModalProps> = ({ isOpen, onClose 
         url: formData.url,
         customAlias: formData.customAlias || undefined,
         title: formData.title || undefined,
-        expiresAt: formData.expiresAt || undefined,
+        expiresAt: formData.expiresAt ? new Date(formData.expiresAt) : undefined,
       });
 
       toast.success('Short link created successfully!');
       handleClose();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to create short link');
+      const errorCode = error.response?.data?.error?.code;
+      if (errorCode === 'QUOTA_EXCEEDED') {
+        toast.error('Monthly link limit reached. Upgrade to Pro for more!', {
+          duration: 5000,
+        });
+        handleClose();
+        navigate('/pricing');
+        return;
+      }
+      toast.error(error.response?.data?.error?.message || error.message || 'Failed to create short link');
     }
   };
 

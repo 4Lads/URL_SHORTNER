@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Card } from '../common';
 import {
-  LinkIcon,
   ClipboardDocumentIcon,
   QrCodeIcon,
   PencilIcon,

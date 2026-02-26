@@ -41,7 +41,9 @@ export const BrowserChart: React.FC<BrowserChartProps> = ({ data }) => {
   // Custom bar label
   const renderCustomLabel = (props: any) => {
     const { x, y, width, value } = props;
-    if (value === 0) return null;
+    if (!value || value === 0 || x === undefined || y === undefined || width === undefined) {
+      return <text />;
+    }
 
     return (
       <text

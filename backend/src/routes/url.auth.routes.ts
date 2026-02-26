@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { UrlAuthController } from '../controllers/url.auth.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
+import { checkUrlQuota } from '../middleware/quota.middleware';
 
 const router = Router();
 
@@ -10,8 +11,8 @@ router.use(authMiddleware);
 // Get all URLs for authenticated user
 router.get('/', UrlAuthController.getUserUrls);
 
-// Create new URL (authenticated)
-router.post('/', UrlAuthController.createUrl);
+// Create new URL (authenticated) - with quota check
+router.post('/', checkUrlQuota, UrlAuthController.createUrl);
 
 // Get single URL by ID
 router.get('/:id', UrlAuthController.getUrlById);

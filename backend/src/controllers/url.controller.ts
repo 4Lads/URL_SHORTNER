@@ -164,7 +164,7 @@ export class UrlController {
       }
 
       // Redirect to original URL
-      res.redirect(301, originalUrl);
+      res.redirect(302, originalUrl);
     } catch (error) {
       console.error('Error redirecting:', error);
 

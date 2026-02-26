@@ -4,6 +4,7 @@ import { persist } from 'zustand/middleware';
 export interface User {
   id: string;
   email: string;
+  plan: string;
   createdAt: string;
 }
 

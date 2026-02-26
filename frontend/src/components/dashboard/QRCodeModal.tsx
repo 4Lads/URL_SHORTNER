@@ -56,14 +56,14 @@ export const QRCodeModal: React.FC<QRCodeModalProps> = ({ isOpen, onClose, url }
       // Convert canvas to PNG and download
       canvas.toBlob((blob) => {
         if (!blob) return;
-        const url = URL.createObjectURL(blob);
+        const blobUrl = URL.createObjectURL(blob);
         const downloadLink = document.createElement('a');
-        downloadLink.href = url;
+        downloadLink.href = blobUrl;
         downloadLink.download = `qr-${url.shortCode}.png`;
         document.body.appendChild(downloadLink);
         downloadLink.click();
         document.body.removeChild(downloadLink);
-        URL.revokeObjectURL(url);
+        URL.revokeObjectURL(blobUrl);
       });
     };
 

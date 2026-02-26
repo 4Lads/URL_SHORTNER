@@ -1,33 +1,64 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, Button, Input } from '../components/common';
+import { PlanBadge, UsageMeter } from '../components/billing';
 import { useAuthStore } from '../store/authStore';
 import { useUiStore } from '../store/uiStore';
-import { authService } from '../services/auth.service';
+import { useBillingStore } from '../store/billingStore';
 import toast from 'react-hot-toast';
 import {
   UserCircleIcon,
   LockClosedIcon,
   Cog6ToothIcon,
+  CreditCardIcon,
   MoonIcon,
   SunIcon,
 } from '@heroicons/react/24/outline';
 
-type TabType = 'profile' | 'security' | 'preferences';
+type TabType = 'profile' | 'security' | 'billing' | 'preferences';
 
 export const Settings: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('profile');
   const { user } = useAuthStore();
   const { theme, toggleTheme } = useUiStore();
+  const {
+    currentPlan,
+    subscription,
+    usage,
+    isLoading: billingLoading,
+    fetchBillingStatus,
+    createCheckoutSession,
+    openCustomerPortal,
+  } = useBillingStore();
 
   // Password change state
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [checkoutCurrency, setCheckoutCurrency] = useState<'usd' | 'inr'>('usd');
+
+  const userPlan = user?.plan || 'free';
+
+  useEffect(() => {
+    if (activeTab === 'billing') {
+      fetchBillingStatus();
+    }
+  }, [activeTab, fetchBillingStatus]);
+
+  // Detect locale for default currency
+  useEffect(() => {
+    try {
+      const locale = navigator.language || '';
+      if (locale.includes('IN') || locale.includes('in')) {
+        setCheckoutCurrency('inr');
+      }
+    } catch { /* ignore */ }
+  }, []);
 
   const tabs = [
     { id: 'profile' as TabType, label: 'Profile', icon: UserCircleIcon },
     { id: 'security' as TabType, label: 'Security', icon: LockClosedIcon },
+    { id: 'billing' as TabType, label: 'Billing', icon: CreditCardIcon },
     { id: 'preferences' as TabType, label: 'Preferences', icon: Cog6ToothIcon },
   ];
 
@@ -119,9 +150,12 @@ export const Settings: React.FC = () => {
                   {user?.email?.charAt(0).toUpperCase() || 'U'}
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-1">
-                    {user?.email || 'User'}
-                  </h3>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-xl font-bold text-neutral-900 dark:text-white">
+                      {user?.email || 'User'}
+                    </h3>
+                    <PlanBadge plan={userPlan} />
+                  </div>
                   <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-4">
                     Account created on {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', {
                       year: 'numeric',
@@ -200,7 +234,7 @@ export const Settings: React.FC = () => {
                 <Button
                   type="submit"
                   variant="primary"
-                  isLoading={isChangingPassword}
+                  loading={isChangingPassword}
                   disabled={isChangingPassword}
                 >
                   {isChangingPassword ? 'Changing Password...' : 'Change Password'}
@@ -214,18 +248,130 @@ export const Settings: React.FC = () => {
               </h3>
               <ul className="space-y-3 text-sm text-neutral-600 dark:text-neutral-400">
                 <li className="flex items-start gap-2">
-                  <span className="text-green-500 mt-0.5">✓</span>
+                  <span className="text-green-500 mt-0.5">&#10003;</span>
                   <span>Use a strong, unique password</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-green-500 mt-0.5">✓</span>
+                  <span className="text-green-500 mt-0.5">&#10003;</span>
                   <span>Change your password regularly</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-green-500 mt-0.5">✓</span>
+                  <span className="text-green-500 mt-0.5">&#10003;</span>
                   <span>Never share your password with anyone</span>
                 </li>
               </ul>
+            </Card>
+          </div>
+        )}
+
+        {/* Billing Tab */}
+        {activeTab === 'billing' && (
+          <div className="space-y-6">
+            {/* Current Plan */}
+            <Card variant="glass" className="p-6">
+              <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">
+                Current Plan
+              </h3>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <PlanBadge plan={userPlan} />
+                  <div>
+                    <p className="font-medium text-neutral-900 dark:text-white capitalize">
+                      {userPlan} Plan
+                    </p>
+                    {subscription && (
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                        {subscription.cancelAtPeriodEnd
+                          ? `Cancels on ${new Date(subscription.currentPeriodEnd).toLocaleDateString()}`
+                          : `Renews on ${new Date(subscription.currentPeriodEnd).toLocaleDateString()}`}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                {userPlan === 'pro' ? (
+                  <Button
+                    variant="outline"
+                    onClick={() => openCustomerPortal()}
+                    loading={billingLoading}
+                  >
+                    Manage Subscription
+                  </Button>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={checkoutCurrency}
+                      onChange={(e) => setCheckoutCurrency(e.target.value as 'usd' | 'inr')}
+                      className="px-3 py-2 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white text-sm"
+                    >
+                      <option value="usd">USD ($19/mo)</option>
+                      <option value="inr">INR (Rs.1,499/mo)</option>
+                    </select>
+                    <Button
+                      variant="primary"
+                      onClick={() => createCheckoutSession(checkoutCurrency)}
+                      loading={billingLoading}
+                    >
+                      Upgrade to Pro
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </Card>
+
+            {/* Usage */}
+            <Card variant="glass" className="p-6">
+              <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">
+                Usage This Month
+              </h3>
+              {usage ? (
+                <div className="space-y-4 max-w-md">
+                  <UsageMeter
+                    used={usage.linksCreated}
+                    limit={usage.linksLimit}
+                    label="Links created"
+                  />
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                    Period: {new Date(usage.periodStart).toLocaleDateString()} - {new Date(usage.periodEnd).toLocaleDateString()}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                  Loading usage data...
+                </p>
+              )}
+            </Card>
+
+            {/* Plan Features */}
+            <Card variant="glass" className="p-6">
+              <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-4">
+                Plan Features
+              </h3>
+              <div className="space-y-3">
+                {currentPlan && (
+                  <dl className="space-y-3 text-sm">
+                    <div className="flex justify-between">
+                      <dt className="text-neutral-600 dark:text-neutral-400">Links per month</dt>
+                      <dd className="font-medium text-neutral-900 dark:text-white">{currentPlan.maxLinksPerMonth}</dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt className="text-neutral-600 dark:text-neutral-400">Analytics retention</dt>
+                      <dd className="font-medium text-neutral-900 dark:text-white">{currentPlan.analyticsRetentionDays} days</dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt className="text-neutral-600 dark:text-neutral-400">CSV export</dt>
+                      <dd className="font-medium text-neutral-900 dark:text-white">{currentPlan.csvExport ? 'Yes' : 'No'}</dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt className="text-neutral-600 dark:text-neutral-400">Custom QR codes</dt>
+                      <dd className="font-medium text-neutral-900 dark:text-white">{currentPlan.customQrCodes ? 'Yes' : 'No'}</dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt className="text-neutral-600 dark:text-neutral-400">API rate limit</dt>
+                      <dd className="font-medium text-neutral-900 dark:text-white">{currentPlan.apiRateLimit}/hr</dd>
+                    </div>
+                  </dl>
+                )}
+              </div>
             </Card>
           </div>
         )}
@@ -281,24 +427,6 @@ export const Settings: React.FC = () => {
                     <option value="90d">90 days</option>
                     <option value="1y">1 year</option>
                   </select>
-                </div>
-              </div>
-            </Card>
-
-            <Card variant="glass" className="p-6 border-l-4 border-amber-500">
-              <div className="flex gap-4">
-                <div className="flex-shrink-0">
-                  <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                    <span className="text-amber-600 dark:text-amber-400 text-xl">💡</span>
-                  </div>
-                </div>
-                <div>
-                  <h4 className="text-sm font-semibold text-neutral-900 dark:text-white mb-1">
-                    Pro Tip
-                  </h4>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                    Dark mode can reduce eye strain and save battery on devices with OLED screens.
-                  </p>
                 </div>
               </div>
             </Card>

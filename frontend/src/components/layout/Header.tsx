@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../common';
+import { PlanBadge } from '../billing';
 import { useAuth } from '../../hooks/useAuth';
 import { useUiStore } from '../../store/uiStore';
 
@@ -59,6 +60,12 @@ export const Header: React.FC = () => {
                 >
                   Features
                 </a>
+                <Link
+                  to="/pricing"
+                  className="text-neutral-700 dark:text-neutral-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                >
+                  Pricing
+                </Link>
               </>
             )}
           </nav>
@@ -82,6 +89,7 @@ export const Header: React.FC = () => {
             {isAuthenticated ? (
               <>
                 <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-neutral-100 dark:bg-neutral-800">
+                  <PlanBadge plan={user?.plan || 'free'} />
                   <span className="text-sm text-neutral-700 dark:text-neutral-300">
                     {user?.email}
                   </span>

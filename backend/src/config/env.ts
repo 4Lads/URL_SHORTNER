@@ -46,6 +46,12 @@ interface EnvConfig {
 
   // CORS
   corsOrigins: string[];
+
+  // Stripe
+  stripeSecretKey: string;
+  stripeWebhookSecret: string;
+  stripeProPriceIdUsd: string;
+  stripeProPriceIdInr: string;
 }
 
 const getEnvVar = (key: string, defaultValue?: string): string => {
@@ -109,6 +115,12 @@ export const config: EnvConfig = {
 
   // CORS
   corsOrigins: getEnvVar('CORS_ORIGINS', 'http://localhost:5173,http://localhost:3000').split(','),
+
+  // Stripe
+  stripeSecretKey: process.env.STRIPE_SECRET_KEY || '',
+  stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || '',
+  stripeProPriceIdUsd: process.env.STRIPE_PRO_PRICE_ID_USD || '',
+  stripeProPriceIdInr: process.env.STRIPE_PRO_PRICE_ID_INR || '',
 };
 
 // Validate configuration

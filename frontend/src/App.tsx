@@ -1,6 +1,5 @@
-import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Landing, Login, Register, Dashboard, Analytics, Settings } from './pages';
+import { Landing, Login, Register, Dashboard, Analytics, Settings, Pricing } from './pages';
 import { AuthLayout, DashboardLayout } from './components/layout';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 
@@ -10,6 +9,7 @@ function App() {
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Landing />} />
+        <Route path="/pricing" element={<Pricing />} />
 
         {/* Auth Routes */}
         <Route element={<AuthLayout />}>

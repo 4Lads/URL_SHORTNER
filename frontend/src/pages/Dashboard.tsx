@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '../components/common';
 import {
   QuickStats,
@@ -7,6 +7,9 @@ import {
   QRCodeModal,
   UrlData,
 } from '../components/dashboard';
+import { UsageMeter } from '../components/billing';
+import { useAuth } from '../hooks/useAuth';
+import { useBillingStore } from '../store/billingStore';
 import { PlusIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 
@@ -14,10 +17,17 @@ export const Dashboard: React.FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isQRModalOpen, setIsQRModalOpen] = useState(false);
   const [selectedUrl, setSelectedUrl] = useState<UrlData | null>(null);
+  const { user } = useAuth();
+  const { usage, fetchBillingStatus } = useBillingStore();
+  const userPlan = user?.plan || 'free';
+
+  useEffect(() => {
+    fetchBillingStatus();
+  }, [fetchBillingStatus]);
 
   const handleEdit = (url: UrlData) => {
     // TODO: Implement edit modal
-    toast.info('Edit functionality coming soon!');
+    toast('Edit functionality coming soon!', { icon: 'ℹ️' });
     console.log('Edit URL:', url);
   };
 
@@ -55,6 +65,17 @@ export const Dashboard: React.FC = () => {
 
       {/* Quick Stats */}
       <QuickStats />
+
+      {/* Usage Meter for Free Users */}
+      {userPlan === 'free' && usage && (
+        <div className="max-w-md">
+          <UsageMeter
+            used={usage.linksCreated}
+            limit={usage.linksLimit}
+            label="Links this month"
+          />
+        </div>
+      )}
 
       {/* URLs List */}
       <div>

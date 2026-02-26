@@ -2,6 +2,8 @@ import React from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { Header } from './Header';
 import { useUiStore } from '../../store/uiStore';
+import { useAuth } from '../../hooks/useAuth';
+import { PlanBadge } from '../billing';
 
 interface NavItem {
   name: string;
@@ -18,6 +20,8 @@ const navItems: NavItem[] = [
 export const DashboardLayout: React.FC = () => {
   const location = useLocation();
   const { sidebarOpen, toggleSidebar } = useUiStore();
+  const { user } = useAuth();
+  const userPlan = user?.plan || 'free';
 
   return (
     <div className="min-h-screen flex flex-col bg-neutral-50 dark:bg-neutral-900">
@@ -60,14 +64,26 @@ export const DashboardLayout: React.FC = () => {
 
           {/* Sidebar Footer */}
           <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-neutral-200 dark:border-neutral-700">
-            <div className="glass-card dark:glass-dark p-4 rounded-lg">
-              <p className="text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                💎 Upgrade to Pro
-              </p>
-              <p className="text-xs text-neutral-600 dark:text-neutral-400">
-                Unlock advanced analytics and custom domains
-              </p>
-            </div>
+            {userPlan === 'pro' ? (
+              <div className="glass-card dark:glass-dark p-4 rounded-lg text-center">
+                <PlanBadge plan="pro" />
+                <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-2">
+                  You're on the Pro plan
+                </p>
+              </div>
+            ) : (
+              <Link
+                to="/pricing"
+                className="block glass-card dark:glass-dark p-4 rounded-lg hover:border-primary-300 dark:hover:border-primary-500 transition-colors border border-transparent"
+              >
+                <p className="text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                  Upgrade to Pro
+                </p>
+                <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                  Unlock advanced analytics and more links
+                </p>
+              </Link>
+            )}
           </div>
         </aside>
 

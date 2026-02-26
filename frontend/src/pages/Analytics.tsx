@@ -5,6 +5,8 @@ import { LoadingSpinner, Card, Button } from '../components/common';
 import { ClicksChart } from '../components/analytics/ClicksChart';
 import { DeviceChart } from '../components/analytics/DeviceChart';
 import { BrowserChart } from '../components/analytics/BrowserChart';
+import { useAuth } from '../hooks/useAuth';
+import { LockClosedIcon } from '@heroicons/react/24/solid';
 import {
   ArrowLeftIcon,
   ArrowDownTrayIcon,
@@ -20,6 +22,8 @@ type TimeRange = '7d' | '30d' | '90d' | 'all';
 export const Analytics = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const userPlan = user?.plan || 'free';
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<TimeRange>('30d');
@@ -69,6 +73,12 @@ export const Analytics = () => {
       toast.success('Analytics exported successfully');
     } catch (error: any) {
       console.error('Failed to export analytics:', error);
+      const errorCode = error.response?.data?.error?.code;
+      if (errorCode === 'FEATURE_LOCKED') {
+        toast.error('CSV export is a Pro feature. Upgrade to unlock!', { duration: 5000 });
+        navigate('/pricing');
+        return;
+      }
       toast.error('Failed to export analytics');
     } finally {
       setIsExporting(false);
@@ -94,11 +104,11 @@ export const Analytics = () => {
     );
   }
 
-  const timeRanges: { value: TimeRange; label: string }[] = [
+  const timeRanges: { value: TimeRange; label: string; proOnly?: boolean }[] = [
     { value: '7d', label: 'Last 7 days' },
     { value: '30d', label: 'Last 30 days' },
-    { value: '90d', label: 'Last 90 days' },
-    { value: 'all', label: 'All time' },
+    { value: '90d', label: 'Last 90 days', proOnly: true },
+    { value: 'all', label: 'All time', proOnly: true },
   ];
 
   return (
@@ -125,19 +135,31 @@ export const Analytics = () => {
         <div className="flex items-center gap-3">
           {/* Time Range Selector */}
           <div className="flex items-center gap-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg p-1">
-            {timeRanges.map((range) => (
-              <button
-                key={range.value}
-                onClick={() => setTimeRange(range.value)}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                  timeRange === range.value
-                    ? 'bg-primary-500 text-white'
-                    : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
-                }`}
-              >
-                {range.label}
-              </button>
-            ))}
+            {timeRanges.map((range) => {
+              const isLocked = range.proOnly && userPlan === 'free';
+              return (
+                <button
+                  key={range.value}
+                  onClick={() => {
+                    if (isLocked) {
+                      toast.error('Upgrade to Pro for extended analytics', { duration: 3000 });
+                      return;
+                    }
+                    setTimeRange(range.value);
+                  }}
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-1 ${
+                    timeRange === range.value
+                      ? 'bg-primary-500 text-white'
+                      : isLocked
+                        ? 'text-neutral-400 dark:text-neutral-500 cursor-not-allowed'
+                        : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                  }`}
+                >
+                  {range.label}
+                  {isLocked && <LockClosedIcon className="w-3 h-3" />}
+                </button>
+              );
+            })}
           </div>
 
           {/* Export Button */}
@@ -147,7 +169,11 @@ export const Analytics = () => {
             variant="outline"
             size="md"
           >
-            <ArrowDownTrayIcon className="w-4 h-4 mr-2" />
+            {userPlan === 'free' ? (
+              <LockClosedIcon className="w-4 h-4 mr-2" />
+            ) : (
+              <ArrowDownTrayIcon className="w-4 h-4 mr-2" />
+            )}
             {isExporting ? 'Exporting...' : 'Export CSV'}
           </Button>
         </div>
